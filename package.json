@@ -1,0 +1,15 @@
+{
+  "name": "resume-match-analyzer",
+  "version": "1.0.0",
+  "description": "AI-powered resume-to-job-description match analyzer using the Google Gemini API, deployed on AWS.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "dotenv": "^17.2.3",
+    "@google/genai": "^2.22.0"
+  }
+}

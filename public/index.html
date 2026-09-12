@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Resume Match Analyzer</title>
+<style>
+  :root {
+    --navy: #1F3864;
+    --bg: #f7f8fa;
+    --text: #222;
+    --border: #d8dce2;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 40px 20px;
+  }
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  h1 {
+    color: var(--navy);
+    font-size: 28px;
+    margin-bottom: 4px;
+  }
+  p.subtitle {
+    color: #555;
+    margin-top: 0;
+    margin-bottom: 24px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 700px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+  textarea {
+    width: 100%;
+    height: 220px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    resize: vertical;
+  }
+  label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 6px;
+  }
+  button {
+    background: var(--navy);
+    color: white;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 20px;
+  }
+  button:disabled {
+    background: #99a3b8;
+    cursor: not-allowed;
+  }
+  #result {
+    margin-top: 30px;
+    display: none;
+  }
+  .score-box {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .score-number {
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--navy);
+  }
+  .section {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .section h3 {
+    margin-top: 0;
+    color: var(--navy);
+  }
+  .section ul {
+    margin: 0;
+    padding-left: 20px;
+  }
+  .error {
+    color: #b00020;
+    margin-top: 16px;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>Resume Match Analyzer</h1>
+    <p class="subtitle">Paste your resume and a job description to see how well they match, powered by Gemini.</p>
+
+    <div class="grid">
+      <div>
+        <label for="resume">Your Resume</label>
+        <textarea id="resume" placeholder="Paste your resume text here..."></textarea>
+      </div>
+      <div>
+        <label for="jobDescription">Job Description</label>
+        <textarea id="jobDescription" placeholder="Paste the job posting text here..."></textarea>
+      </div>
+    </div>
+
+    <button id="analyzeBtn">Analyze Match</button>
+    <div id="errorMsg" class="error"></div>
+
+    <div id="result">
+      <div class="score-box">
+        <div class="score-number" id="scoreNumber">--</div>
+        <div>Match Score</div>
+      </div>
+      <div class="section">
+        <h3>Strengths</h3>
+        <ul id="strengthsList"></ul>
+      </div>
+      <div class="section">
+        <h3>Gaps</h3>
+        <ul id="gapsList"></ul>
+      </div>
+      <div class="section">
+        <h3>Suggestions</h3>
+        <ul id="suggestionsList"></ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const btn = document.getElementById('analyzeBtn');
+    const resultDiv = document.getElementById('result');
+    const errorMsg = document.getElementById('errorMsg');
+
+    btn.addEventListener('click', async () => {
+      const resume = document.getElementById('resume').value.trim();
+      const jobDescription = document.getElementById('jobDescription').value.trim();
+      errorMsg.textContent = '';
+
+      if (!resume || !jobDescription) {
+        errorMsg.textContent = 'Please fill in both fields.';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Analyzing...';
+      resultDiv.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ resume, jobDescription }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || 'Something went wrong.');
+        }
+
+        document.getElementById('scoreNumber').textContent = data.matchScore + '%';
+        fillList('strengthsList', data.strengths);
+        fillList('gapsList', data.gaps);
+        fillList('suggestionsList', data.suggestions);
+        resultDiv.style.display = 'block';
+      } catch (err) {
+        errorMsg.textContent = err.message;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Analyze Match';
+      }
+    });
+
+    function fillList(id, items) {
+      const ul = document.getElementById(id);
+      ul.innerHTML = '';
+      (items || []).forEach((item) => {
+        const li = document.createElement('li');
+        li.textContent = item;
+        ul.appendChild(li);
+      });
+    }
+  </script>
+</body>
+</html>
