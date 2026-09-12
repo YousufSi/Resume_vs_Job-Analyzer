@@ -2,7 +2,7 @@
 
 An AI-powered tool that compares a resume against a job description and returns a match score, strengths, gaps, and improvement suggestions — powered by Google's Gemini API.
 
-🔗 **Live demo:** http://18.218.230.45:3000
+**Live demo:** http://18.218.230.45:3000
 
 ## Why I Built This
 
